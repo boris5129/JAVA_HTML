@@ -1,0 +1,101 @@
+jakarta EE  웹서버를 개발하기위한 프로젝트 원래 JAVA EE
+
+뭐든 프로젝트 처음할일은 실행
+servlet은 서버가 실행된다(톰캣 - 이게 main)
+1. 실행확인
+2. 라이브러리 다운
+
+이건 xxxx. JAR  or .WAR
+packaging  이 스프링부트에서는 JAR - 메인호출되면서 프로그램실행
+main이 실행된다.
+servlet 는 WAR -> 톰캣을 실행하고 톰캣에서 main을 호출한다.
+war는 웹어플리케이션 이건 압축파일. 실행x 프로젝트 호출용도
+
+maven.compiler.target 이건 자바버전
+
+junit 전체토탈단위테스트(자바통합테스트)   xunit 이라고한다 x 의 위치에는 '언어명'이 온다
+-기능별로 테스트를 하기위한 도구
+단위테스트란 - 기능하나하나마다 테스트 (메서드,클래스 단위로)
+통합테스트 - 전체를 확인 
+
+dependencies - 외부라이브러리들(의존성 외부) <- dependency 외부라이브러리가 모인다
+dependencies 안에 롬북 복붙(https://mvnrepository.com/artifact/org.projectlombok/lombok/1.18.48)
+dependencies 안에 롬북 https://mvnrepository.com/artifact/tools.jackson.core/jackson-databind/3.2.4
+dependencies 안에 롬북 https://mvnrepository.com/artifact/tools.jackson.core/jackson-core/3.2.4
+후 메이븐 업데이트
+서버에 index.jsp 붙여서 확인(동일페이지) 
+톰캣편집 -  http://localhost:8080/ 경로확인
+
+애플리케이션 컨텍스트를 / 로	주소를 제일 최상단으로
+
+html 필기
+html 닫을때는 / 사용
+h1으로 감싸져있는건 굵고 크게 h1사용시 자동으로 한줄내려옴
+타겟없애는방법 메이븐 - 수명주기 - 클린(아까 타겟과 src가 다른경우) target을 리셋해서 적용시킨다.
+
+html은 문서다 - text가 존재한다 - 텍스트상자가 있다. (안에도 텍스트 입력가능)
+</br> 줄바꿈 (크게 쓸일은 없다)
+<div> </div> - 사이에 넣고싶은 글 <div>는 문서파일의 텍스트 상자 개념 (영영을나누고 한줄을 통으로 차지)
+div전은 한줄을 통채로 사용하지만
+<button>은 글자처럼 옆에 붙는거 , 버튼이지만 글자취급
+div 같은애들을 블록레벨(blocklevel) 요소라고 한다.
+button 같은 애들은 text를 안에 사용한다 해서 인라인(inline) 요소 라고한다.
+문서작성용이라 이런것들이 있다. 글자처럼취급같은거
+href 참조할 하이퍼링크 (h + ref ) h는 하이퍼링크, ref 는 레퍼런스
+href  -< 하고 serblet 하면 여기경로로 찾아가라
+href 뒤는 주소를 적는곳 즉 주소이동한는기능 혹은 파일이름(최종경로)
+@WebServlet  - /hello-servlet 주소창에 이거 입력시 클래스를 찾아간다.
+@WebServlet(name = "helloServlet" 여기가 servlet의 이름이고
+, value = "/hello-servlet")	여기가 valu  servlet의 주소를 입력하면 doget이 실행된다.
+요청후 응답코드에 따라 html , json, 이미지파일 등 으로 따라간다 호출할때는 선택x 
+/tr 한줄을 의미함 1줄안에 다나옴 
+http survlet 할떈 항상 extends HttpServlet 해줘야한다.
+ req.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(req, resp); -여는방법
+<button onclick="location.href='http://localhost:8080/user/register'">등록</button> 누르면 여기로 이동해라
+<%' '%> - 스크립트릿이라고 부름 html에서 자바코드 사용할수있는곳
+ <input type="text" name="username" placeholder="사용자이름"> onkeyup="handleOnChange(even)"
+ name="username"는 처음에 작성한 변수명에 맞췄다,
+<button>등록하기</button>의 type은 기본은 submit이다 그래서 누름녀 submit이 일어난다
+list,register control는 페이지를 보여주고 있지만 api control은 데이터를 관리하고있다
+list,register control 는 jsp의 view와 세트 
+데이터 전송만 하는애는 API
+
+상대경로 user/register 처럼 없거나 앞에 ./ ../ 과같은게 들어가고 
+상대경로는 현재 위치에서 주소적은게 들어간다
+ex) 현위치가 list 면 list/user/register
+/ 로 시작하면 무조건 절대경로 - 최상단에서 뒤주소로 들어간다.
+ex) 현위치가 list 라도 최상단/user/register
+
+
+const jsonData = JSON.stringify(data); 제이슨자료형으로 변환
+
+if(instance == null) {
+ instance = new UserService(UserRepository.getInstance());
+ }           //종속성주입 - 생성될떄 바로준다 (조립방식)
+
+
+원래 jsp라는 확장자는 없다	Servlet이랑 HTML 섞음 
+jsp - html 형식을 따라가되 <%><%> 사용 
+자바코드는 <% '자바코드' %>
+html에는 자바코드 쓸수없다 JSP라서 가능하다.
+hjp에서의 표현식 <% '=' '자바코드'%> = 이 들어간다
+html 안에는 java 코드를 쓸수없어서 java 안에 html코드를 넣는다.
+head는 정보 body는 보여주는부분
+<title>은 탭란( 파일명이 제목이다)
+
+위 작업을 걸쳐 html화면을 만들어내는 행위를 랜더링 이라한다.
+싱글페이지어플리케이션 (SPA) - > 한파일(하나의페이지)에서 조건을걸어 화면을 계속 바꿈(리엑트)
+멀티페이지어플리케이션 (MPA) -> 파일여러개를 넣고 파일(여러페이지를 계속바꿈)을 바꿔서 화면을 바꿈(자바)
+JSP 개발 대부분은 멀티페이지(싱글가능은함)
+자바스크립트는 둘다 지만 싱글위주
+SPA를 서버에서 그려서 응답해주는걸 - 서버사이드랜더링 SSR(멀티페이지어플리케이션이 많다)
+서버에 요청넣고 여러개의 페이지중 데이터 채워 원하는 페이지를 응답준다
+전체가 바뀌니깐 화면전체가 깜박인다
+첫 랜더링은 서버사이드랜더링이지만(이때 일반적으로 싱글페이지를 준다) 이후 부터는
+이떄부터 백엔드에서 데이터를 받아서 클라이언트가 그려서(페이지 랜더링)준다 - 클라이언트사이드사이드랜더링 CSR 페이지가 부분수정 , 모바일app 구조를 만들때도 좋다
+
+jsp모델1 - html java가 중간중간껴서 섞여있다.
+jsp모델2 - java코드를 한쪽으로 모아서 쓰는거
+
+모델이 발전해서 MVC 가 나온다 모델,컨트롤,뷰를 구분
+mvc 패턴 - control러에서 데이터 관리하고 jsp 파일로 데이터를 넘겨 jsp에서 보여준다.
