@@ -25,8 +25,8 @@ public class BookApiController extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setCharacterEncoding("UFT-8");
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, RuntimeException,IOException {
+        req.setCharacterEncoding("UTF-8");
         ObjectMapper objectMapper = new ObjectMapper();
         Book book = objectMapper.readValue(req.getInputStream(), Book.class);
         System.out.println("책 확인 요청 들어옴");
@@ -36,13 +36,15 @@ public class BookApiController extends HttpServlet {
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
             resp.setStatus(200);
-            resp.getWriter().println(objectMapper.writeValueAsString(Map.of("message", "책 등록 성공"
+            resp.getWriter().println(objectMapper.writeValueAsString(Map.of(
+                    "message", "책 등록 성공"
             )));
         }catch (DuplicatedException e){
             resp.setContentType("application/json");
             resp.setCharacterEncoding("UTF-8");
             resp.setStatus(400);
-            resp.getWriter().println(objectMapper.writeValueAsString(Map.of("message", e.getMessage()
+            resp.getWriter().println(objectMapper.writeValueAsString(Map.of(
+                    "message", e.getMessage()
             )));    //왜 여기는 e.getmessage인지 확인
         }return;
     }

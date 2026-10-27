@@ -25,7 +25,7 @@ public class BookListController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        req.setAttribute("booklist", bookService.getBookAll());
+        req.setAttribute("bookList", bookService.getBookAll());
         req.getRequestDispatcher("/WEB-INF/views/book-list.jsp").forward(req, resp);
     }
 }

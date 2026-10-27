@@ -21,9 +21,10 @@ public class BookService {
     }
 
     public void register(Book book) throws RuntimeException{
-        if(isDuplicatedUsername(book.getBookName())){
+        if(isDuplicatedUsername(book.getBookname())){
             throw new DuplicatedException("이미 존재하는 책이름 입니다.");
         }
+        bookRepository.insert(book);
     }
 
     public boolean isDuplicatedUsername(String bookname){

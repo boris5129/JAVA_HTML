@@ -26,9 +26,9 @@
 
 <script>
     let book = {
-        id: "",
+        id: 0,
         bookname: "",
-        price: "",
+        price: 0,
 
     }
 
@@ -46,7 +46,7 @@
 
     async function registerApi(data){
         const jsonData = JSON.stringify(data);      //제이슨자료(문자열)형으로 변환
-        const  response = await fetch("http://localhost:8080/api/books", {
+        const  response = await fetch("http://localhost:8080/api/book", {
             method: "post",
             headers: {
                 "Content-Type": "application/json", //이건 제이슨이다 라고 꼬리표 붙여주는거
@@ -67,7 +67,7 @@
 
     function handleOnSubmit(event) {
         event.preventDefault();         //preventDefault 기존 전달된 이벤트(행동) 제거
-        registerApi(book;
+        registerApi(book);
     }
 </script>
 </body>

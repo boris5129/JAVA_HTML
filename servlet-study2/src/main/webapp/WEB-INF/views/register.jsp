@@ -13,7 +13,7 @@
 <body>
     <form method="post" onsubmit="handleOnSubmit(event)">
     <div>
-    <input type="text" name="username" placeholder="사용자이름" onkeyup="handleOnChange(event)">
+        <input type="text" name="username" placeholder="사용자이름" onkeyup="handleOnChange(event)">
     </div>
     <div>
         <input type="password" name="password" placeholder="비밀번호" onkeyup="handleOnChange(event)">

@@ -28,13 +28,14 @@ public class BookRepository {
 
     public Book findByBookname(String bookname){
         for (Book book : books){
-            if(book.getBookName().equalsIgnoreCase(bookname)){
+            if(book.getBookname().equalsIgnoreCase(bookname)){
                 return book;
             }
         }return null;
     }
 
     public List<Book> findAll(){
+
         return books.stream().map(book -> new Book(book)).toList();
     }
 
