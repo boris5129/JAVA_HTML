@@ -26,20 +26,23 @@
         <thead>
         <tr>
             <th>번호</th>
-            <th>상품명</th>
+            <th>차종</th>
+            <th>색상</th>
             <th>가격</th>
         </tr>
         </thead>
         <tbody>
         <tr>
-            <td>번호</td>
-            <td>상품명</td>
-            <td>가격</td>
+            <th>번호</th>
+            <th>차종</th>
+            <th>색상</th>
+            <th>가격</th>
         </tr>
         <tr>
-            <td>번호</td>
-            <td>상품명</td>
-            <td>가격</td>
+            <th>번호</th>
+            <th>차종</th>
+            <th>색상</th>
+            <th>가격</th>
         </tr>
         </tbody>
     </table>
@@ -59,16 +62,12 @@
             console.log(responseJson);
             const tbody = document.querySelector("tbody");
             tbody.innerHTML = responseJson.map((product, index) => (
-                "<tr><td>" + (index + 1) + "</td><td>" + product.productName + "</td><td>" + product.price + "</td></tr>"
+                `<tr>
+                    <td>\${index + 1}</td>
+                    <td>\${product.productName}</td>
+                    <td>\${product.price}</td>
+                </tr>`
             )).join("");
-            <%--tbody.innerHTML = responseJson.map((value, index) => (--%>
-            <%--    '<tr><td>${index + 1}</td><td>${product.productName}</td><td>${product.productPrice}</td></tr>'--%>
-            <%--)).join("");--%>
-            // tbody.innerHTML = responseJson.map((product, index) => (
-            //     // 2. 양 끝을 백틱(`)으로 감싸기
-            //     // 3. $ 기호 앞에 백슬래시(\) 붙이기
-            //     `<tr><td>\${index + 1}</td><td>\${product.productName}</td><td>\${product.productPrice}</td></tr>`
-            // )).join("");  이거확인
 
         }
         getProductList();
