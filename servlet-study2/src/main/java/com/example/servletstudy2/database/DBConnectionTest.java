@@ -1,5 +1,7 @@
 package com.example.servletstudy2.database;
 
+import com.example.servletstudy2.entity.Menu;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +20,7 @@ public class DBConnectionTest {
         // jdbc:mysql://localhost:3308/
 
         List<Menu> menus = new ArrayList<>();
-        try(Connection connection = DriverManager.getConnection(url, username, password);){
+        try(Connection connection = DriverManager.getConnection(url, username, password)){
             PreparedStatement pstmt = connection.prepareStatement("""
 select
     *

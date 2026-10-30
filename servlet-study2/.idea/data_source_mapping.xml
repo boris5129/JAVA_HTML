@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/src/main/java/com/example/servletstudy2/database/DBConnectionTest.java" value="60dcb65a-0ebb-436e-841f-b0776b2acfae" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/example/servletstudy2/database/DBConnectionTest02.java" value="60dcb65a-0ebb-436e-841f-b0776b2acfae" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/example/servletstudy2/database/DBConnectionTest03.java" value="60dcb65a-0ebb-436e-841f-b0776b2acfae" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/example/servletstudy2/repository/CustomerRepository.java" value="60dcb65a-0ebb-436e-841f-b0776b2acfae" />
+  </component>
+</project>

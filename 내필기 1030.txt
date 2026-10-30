@@ -1,0 +1,44 @@
+concat('%', ? ,'%')
+concat 문자열 합친다.
+'%?%' 하면 %'관우'% 가 되서 '' 를 없애기 위해 concat쓴다
+
+CHAR_LENGTH(s)
+안쓰면 byte 수가 나온다
+
+SUBSTRING(s, 시작, 길이) 중간에 자른다 
+LEFT / RIGHT 양옆을 자른다.
+
+rounded 반올림
+ceil 소수점도 나옴 
+DIV 몫만 원하면
+
+now // 현재 연-월-일 시:분:초를 모두 반환
+curdat// 현재 연-월-일(날짜만) 반환
+DATE(dt) //날짜  2026-06-30  / 시각 제거			
+YEAR · MONTH · DAY //날짜 2026 · 6 · 30
+HOUR · MINUTE // 시간 18 · 47
+
+dayofweek	//  금1 = 일요일 … 7 = 토요일
+weekday	// 0 = 월요일 … 6 = 일요일
+LAST_DAY(d) // 그 달의 마지막 날
+
+date_format// 날짜를 문자열로 
+DATE_ADD // 날짜 뒤
+INTERVAL // 날짜 기간 뒤
+
+함수조건문
+case - when,tehn - (else가능)end // 
+if (조건, 참값, 거짓값) // 조건을 넣고 참이면 참값 거짓이면 거짓값
+
+함수를 를 썻을때 as 를 써줘야 한다. (아니면 이상하게 나옴)
+연산한 후에 결과값을  쓸때 함수를 쓰면 좋다. 보통 select 문에 사용 where은 자체 조건문이잇어서
+
+null 처리
+ifnull -- a가 NULL이면 b
+NULLIF(a, b) -- 'a = b '이면 NULL
+IF(조건, 참, 거짓) -- 둘 중 하나 (MySQL 전용)
+COALESCE(a, b, c, …) -- 처음 널이 아닌값 찾기 / 널 처리 널 찾고 교체   
+//a에 null 이 있으면 b 대입 b도 널이면 c 이런식으로 진행
+null 연산시 무조건 null
+
+
