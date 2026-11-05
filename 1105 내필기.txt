@@ -1,0 +1,62 @@
+테이블 설계
+create 'x' 이름 으로 구조를 만든다.
+컬럼명 + 자료형 + null 처리  
+id 값을 primary key로 많이씀 
+PK에 AUTO_INCREMENT 거의 쓴다.
+유니크 - 1:1 매칭이 될수있게 한다.
+CONSTRAINT - FOREIGN KEY 세팅 과 CHECK
+CONSTRAINT + 이름 + 제약(check) + 조건
+
+CONSTRAINT `fk_reviews_order` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`),
+reviews에 넣는 order_id는 orders에 존재하는 order_id여야 한다
+
+CHECK, PRIMARY KEY, FOREIGN KEY  위(create table) 에 해도되는데 복잡해진다.
+
+자료형
+TINYINT  - java의 byte 1byte
+INT - 4byte int
+BIGINT - long 8byte
+
+DECIMAL - 소수점 DECIMAL(자리수, 소수점)
+
+중간테이블 (2정규되어져 있는 테이블)
+
+VARCHAR(n) - 빈공간 삭제 필요한만큼 ex) 6칸에 1 = 1 
+차이 
+CHAR(n) - 자리수 고정  ex) 6칸에 1 = 000001
+text - 두개가 못담는거 text 에도 long midle 이런게 있다.
+
+PRIMARY KEY - 중복x 고유하는 대표
+not null - 빈칸일수 없다
+unique - 중복 금지 
+default - 값안주면 기본 값 (null일떄 기본값 세팅)
+check - 조건이 참인경우
+foreign kry - 참고 ( 다른테이블에 있는 값만)
+
+부모식별자 삭제가 안되지만 조건(on delete)  /  on이 붙으면 이벤트(뭔가가 일어나면)
+restrict/ no action -  삭제를 막는 역할
+cascade - 부모 자식 다 삭제.
+set null - 자식fk를 null 로 
+
+alter table(수정, 구조변경)
+컬럼 추가, 제약조건 추가
+after (위치를설정 ex after 뒷자리에 추가하겠다)
+
+add 추가 modify 타입 제약 변경 rename 이름변경(rename 기존이름 to 바꿀 이름) 
+drop 삭제  dropconstraint 제약삭제0
+
+drop 삭제
+delete 조건맞는 행삭제
+truncate 모든행 삭제(구조남김) - 초기화 autoincrement 를 1로 초기화(완전초기화)
+
+제약조건 목록
+information_schema
+
+'ㅌㅌㅌ' REGEXP ('ㅌㅌㅌ) 뒤 문자열이 앞과 일치하는가?
+^[0-9]{4}-(0[1-9]|1[0-2])$  [0-9]{4} 앞에 숫자 4자리는 0~9 까지가 4자리
+(0[1-9] 앞자리가 0이면 뒤에 1~9 1[0-2 앞이 1이면 0~ 2 (달)
+
+insert into()
+순서를 바꾸거나 제외시키거나 할때 적어서 위치를 잡아준다.
+
+select 한 결과를 insert 할수있다 select의 순서대로 매칭
