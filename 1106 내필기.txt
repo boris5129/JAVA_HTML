@@ -1,0 +1,19 @@
+insert select - 인설트한 결과를 셀렉트 한다 제약 - 컬럼을 다만들어야한다.
+update - 수정
+from 같은거 없고 update ... set
+그리고 where 조건을 줘야한다.
+
+여러개 한번에 할떄 update에 join이나 서브커리쓸수있다.
+
+SET SQL_SAFE_UPDATES = 1;
+업데이트 될떄 (테이블변화 delete 포함) 안전장치(where 없으면 수정못하게)
+전체 수정할떄는  SET SQL_SAFE_UPDATES = 0; 으로 보호를 풀고 작업
+
+delete 할떄면 가능한 PK 값을 사용하는게 좋다. where이 정말 중요하다
+전체삭제는 가능한 안하는게 좋다 다날아갈수 있으니
+
+트렌젝션의 성질
+Atomicity 원자성 - 온전한 하나(더이상안쪼개짐) / 하나의 작업을 온전하게 만들어
+Consistency 일관성 - 일관된 작업을 해야한다 제약조건만족하고 / 일괄성있는 작업을 만든다.
+Isolation 격리성 - 동시실행되도 간섭하지 않는다. / 
+Durability 지속성 - commit 된거 남는다 영구저장 /
