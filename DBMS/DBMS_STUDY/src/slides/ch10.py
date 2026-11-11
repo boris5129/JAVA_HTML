@@ -1,0 +1,225 @@
+"""Ch10 뷰·인덱스·사용자 관리 — 슬라이드 정의 (교안 chapters/ch10-view-index-user/README.md 기준)
+
+슬라이드의 SQL은 위에서부터 같은 접속에서 순서대로 실행된다.
+EXPLAIN 결과는 "cols"로 핵심 열만 보여 준다(교안에는 전체 열).
+"""
+
+EX = ["type", "possible_keys", "key", "rows", "Extra"]
+DB = "hanip_delivery10"
+
+AMOUNTS = """CREATE VIEW v_order_amounts AS
+SELECT o.order_id, o.ordered_at, o.customer_id, o.restaurant_id, o.status,
+    SUM(oi.quantity * oi.unit_price) AS food_amount,
+    o.delivery_fee, o.discount_amount,
+    SUM(oi.quantity * oi.unit_price) + o.delivery_fee - o.discount_amount AS total_amount
+FROM orders o
+JOIN order_items oi ON o.order_id = oi.order_id
+GROUP BY o.order_id;
+
+SELECT order_id, status, food_amount, delivery_fee, discount_amount, total_amount
+FROM v_order_amounts
+WHERE ordered_at >= '2026-06-30'
+ORDER BY order_id;"""
+
+MONTHLY = """CREATE VIEW v_store_monthly_sales AS
+SELECT DATE_FORMAT(a.ordered_at, '%Y-%m') AS sales_month,
+    r.restaurant_id, r.name AS restaurant_name, r.category,
+    COUNT(*) AS orders, SUM(a.total_amount) AS sales
+FROM v_order_amounts a
+JOIN restaurants r ON a.restaurant_id = r.restaurant_id
+WHERE a.status = '배달완료'
+GROUP BY DATE_FORMAT(a.ordered_at, '%Y-%m'), r.restaurant_id, r.name, r.category;"""
+
+TODAY = "EXPLAIN\nSELECT order_id, customer_id, status, ordered_at\nFROM orders\nWHERE ordered_at >= '2026-06-30';"
+
+
+def box(x, y, text, w=2.65, h=0.8, dark=False, size=16):
+    return {"kind": "box", "x": x, "y": y, "w": w, "h": h, "text": text, "size": size, "align": "center", "dark": dark}
+
+
+DECK = {
+    "title": "Ch10. 뷰·인덱스·사용자 관리",
+    "footer": "Ch10 · 뷰 · 인덱스 · 사용자 관리",
+    "org": "Korea IT Academy Busan · 강사 김준일",
+    "sections": [
+        {"title": "시작", "slides": [
+            {"type": "cover", "label": "MySQL 30시간 · CHAPTER 10 · PART 3 설계와 운영",
+             "title": "뷰 · 인덱스 ·\n사용자 관리", "sub": "오늘의 DB · hanip_delivery10 · root로 접속"},
+            {"type": "request", "label": "오늘의 요청", "title": "저장하고, 빠르게, 안전하게",
+             "from": "데이터팀 김 팀장",
+             "text": "① 40줄짜리 **가게별 매출 리포트**, 이름 붙여 **저장**하고 싶어요.\n② 주문이 수백만 건이 되면 **\"오늘 주문\" 화면이 느려진대요.**\n③ 인턴 계정 — 리포트는 보되 **전화번호는 못 보게, 아무것도 못 바꾸게.**",
+             "note": "세 요청 = **뷰** · **인덱스** · **사용자와 권한**"},
+            {"type": "agenda", "label": "목차", "title": "오늘 배울 것", "items": [
+                ["뷰", "쿼리에 이름 붙이기 · 갱신 가능한 뷰 · 보안 뷰"],
+                ["인덱스", "EXPLAIN · 열 가공 금지 · 복합 인덱스 순서"],
+                ["사용자와 권한", "CREATE USER · GRANT · REVOKE · ROLE"],
+                ["백업", "mysqldump — 수업 기록 01~10 보관"],
+                ["SQL 총정리", "DDL · DML · DCL · TCL"],
+            ]},
+        ]},
+        {"title": "뷰", "slides": [
+            {"type": "section", "label": "01", "title": "뷰", "sub": "쿼리에 이름 붙이기"},
+            {"type": "code", "label": "01 · CREATE VIEW", "title": "주문 금액 계산을 뷰로 저장",
+             "sql": AMOUNTS.split("\n\nSELECT")[0], "layout": "stack", "codeSize": 16,
+             "caption": "Ch05부터 매번 쓰던 JOIN + GROUP BY 계산을 `v_order_amounts`라는 이름으로 저장."},
+            {"type": "code", "label": "01 · CREATE VIEW", "title": "뷰는 테이블처럼 조회한다",
+             "sql": "SELECT" + AMOUNTS.split("\n\nSELECT")[1], "layout": "stack", "codeSize": 17,
+             "caption": "뷰는 **데이터를 저장하지 않습니다.** 저장되는 건 SELECT문뿐, 조회할 때마다 실행 → 원본이 바뀌면 즉시 반영."},
+            {"type": "code", "label": "01 · 뷰 위에 뷰", "title": "가게별 월 매출 리포트",
+             "sql": MONTHLY, "layout": "stack", "codeSize": 16,
+             "caption": "금액 계산은 `v_order_amounts`가 이미 하므로 리포트는 그 위에 짧게. **\"배달완료만 매출\"** 규칙이 뷰 한 곳에 고정됩니다."},
+            {"type": "code", "label": "01 · 뷰 위에 뷰", "title": "40줄짜리 리포트가 한 줄로",
+             "sql": "SELECT restaurant_name, category, orders, sales\nFROM v_store_monthly_sales\nWHERE sales_month = '2026-06'\nORDER BY sales DESC;", "layout": "stack", "codeSize": 20, "limit": 5,
+             "caption": "쓰는 사람은 내부를 몰라도 됩니다. 테이블 구조가 바뀌어도 **뷰 정의만** 고치면 이 쿼리는 그대로."},
+            {"type": "table", "label": "01 · 뷰", "title": "뷰의 장점과 관리 명령",
+             "headers": ["장점 / 명령", "설명"],
+             "rows": [["**단순화**", "복잡한 JOIN·집계를 이름 하나로"],
+                      ["**일관성**", "업무 규칙(배달완료만 매출)이 한 곳에"],
+                      ["**보안**", "보여 줄 열·행만 담은 뷰에만 권한 부여"],
+                      ["**독립성**", "테이블이 바뀌어도 뷰를 쓰는 쿼리는 그대로"],
+                      ["`SHOW CREATE VIEW v`", "저장된 SELECT문 확인"],
+                      ["`CREATE OR REPLACE VIEW v AS …`", "정의 바꾸기"],
+                      ["`DROP VIEW v`", "삭제 (원본 데이터는 그대로)"]],
+             "colW": [4.6, 7.43], "rowH": 0.56, "boldFirst": False, "size": 14},
+            {"type": "code", "label": "01 · 갱신 가능한 뷰", "title": "단순한 뷰는 UPDATE할 수 있다",
+             "sql": "CREATE VIEW v_open_restaurants AS\nSELECT restaurant_id, name, category, delivery_fee, is_open\nFROM restaurants\nWHERE is_open = TRUE\nWITH CHECK OPTION;\n\nUPDATE v_open_restaurants SET delivery_fee = 2500 WHERE restaurant_id = 4;\n\nSELECT restaurant_id, name, delivery_fee FROM restaurants WHERE restaurant_id = 4;",
+             "layout": "stack", "codeSize": 16,
+             "caption": "테이블 하나 · 집계 없음 → 뷰로 UPDATE 가능. 실제로 바뀌는 것은 **원본 테이블**."},
+            {"type": "compare", "label": "01 · 갱신 가능한 뷰", "title": "막히는 두 가지",
+             "left": {"tag": "✗ 뷰 조건을 벗어나는 변경", "error": True, "codeSize": 15,
+                      "sql": "UPDATE v_open_restaurants\nSET is_open = FALSE\nWHERE restaurant_id = 4;"},
+             "right": {"tag": "✗ 집계한 뷰", "error": True, "codeSize": 15,
+                       "sql": "UPDATE v_store_monthly_sales\nSET sales = 0\nWHERE restaurant_id = 1;"},
+             "caption": "`WITH CHECK OPTION` = 바꾼 행이 뷰에서 사라지는 변경 금지. 집계 뷰는 한 행이 원본 여러 행이라 불가. **실무에서 뷰는 대부분 읽기 전용.**"},
+            {"type": "code", "label": "01 · 보안 뷰", "title": "인턴용 고객 뷰 — 전화번호 가리기",
+             "sql": "CREATE VIEW v_customers_masked AS\nSELECT customer_id, name,\n    CONCAT(LEFT(phone, 4), '****', RIGHT(phone, 5)) AS phone_masked,\n    district, grade, joined_at\nFROM customers;\n\nSELECT * FROM v_customers_masked ORDER BY customer_id;",
+             "layout": "stack", "codeSize": 17, "limit": 3,
+             "caption": "이메일·주소·생일은 아예 빼고, 전화번호는 가운데를 가림. 이 뷰에만 권한을 주면 원본 없이도 조회 가능(**DEFINER 권한**으로 실행)."},
+        ]},
+        {"title": "인덱스", "slides": [
+            {"type": "section", "label": "02", "title": "인덱스", "sub": "책 맨 뒤의 찾아보기"},
+            {"type": "table", "label": "02 · 인덱스", "title": "\"트랜잭션\"이 나오는 쪽을 찾으려면",
+             "headers": ["방법", "책에서", "DB에서"],
+             "rows": [["처음부터 끝까지 넘기기", "500쪽 전부", "**풀 테이블 스캔** — 모든 행을 읽음"],
+                      ["맨 뒤 **찾아보기**에서 가나다순으로", "몇 쪽만", "**인덱스 탐색** — 정렬된 목록에서 바로"]],
+             "colW": [4.0, 2.6, 5.43], "rowH": 0.8, "boldFirst": False,
+             "caption": "인덱스 = 열 값을 **정렬해 둔 별도의 자료구조**(B-Tree). 100만 행이면 풀 스캔 100만 번, B-Tree는 3~4단계. **PK·UNIQUE·FK는 자동 생성.**"},
+            {"type": "code", "label": "02 · EXPLAIN", "title": "\"오늘 주문\" 쿼리는 어떻게 실행되나",
+             "sql": TODAY, "cols": EX, "layout": "stack", "codeSize": 20, "resSize": 16,
+             "caption": "`type = ALL` → **풀 테이블 스캔**. 6건을 찾으려고 563행 전부를 읽습니다. 주문이 500만 건이면 500만 행."},
+            {"type": "table", "label": "02 · EXPLAIN", "title": "EXPLAIN에서 볼 것 세 가지",
+             "headers": ["열", "뜻", "좋음 / 나쁨"],
+             "rows": [["`type`", "접근 방식", "`const` · `ref` · `range` 좋음 / **`ALL` 풀 스캔**"],
+                      ["`key`", "실제로 고른 인덱스", "NULL이면 인덱스 안 씀"],
+                      ["`rows`", "읽을 것으로 예상한 행 수", "적을수록 좋음"],
+                      ["`Extra`", "추가 작업", "`Using filesort`(별도 정렬)는 주의"]],
+             "colW": [1.8, 4.0, 6.23], "rowH": 0.68, "boldFirst": False,
+             "caption": "563행에서는 시간 차이가 체감되지 않습니다. 성능은 시간이 아니라 `type`과 `rows`로 판단하세요."},
+            {"type": "code", "label": "02 · CREATE INDEX", "title": "ordered_at에 인덱스를 만들면",
+             "sql": "CREATE INDEX idx_orders_ordered_at ON orders (ordered_at);\n\n" + TODAY, "cols": EX, "layout": "stack", "codeSize": 18, "resSize": 15,
+             "caption": "`type` ALL → **range**, `rows` 563 → **6**. 데이터가 커질수록 차이는 수천, 수만 배."},
+            {"type": "code", "label": "02 · 열 가공", "title": "같은 뜻인데 인덱스를 못 쓴다",
+             "sql": "EXPLAIN\nSELECT order_id, customer_id, status, ordered_at\nFROM orders\nWHERE DATE(ordered_at) = '2026-06-30';", "cols": EX, "layout": "stack", "codeSize": 20, "resSize": 16,
+             "caption": "인덱스에 정렬된 건 `ordered_at`이지 `DATE(ordered_at)`이 아닙니다. **인덱스 열을 함수·연산으로 가공하면 인덱스 사용 불가.**"},
+            {"type": "table", "label": "02 · 열 가공", "title": "열은 그대로, 값 쪽을 바꾼다",
+             "headers": ["✗ 인덱스 못 씀", "✓ 인덱스 사용"],
+             "rows": [["`DATE(ordered_at) = '2026-06-30'`", "`ordered_at >= '2026-06-30' AND ordered_at < '2026-07-01'`"],
+                      ["`YEAR(ordered_at) = 2026`", "`ordered_at >= '2026-01-01' AND ordered_at < '2027-01-01'`"],
+                      ["`price + 500 > 10000`", "`price > 9500`"],
+                      ["`name LIKE '%국밥'` (앞이 %)", "`name LIKE '돼지%'` (앞이 고정)"]],
+             "colW": [4.9, 7.13], "rowH": 0.7, "boldFirst": False, "size": 14,
+             "caption": "Ch03에서 배운 **반열린 구간** `>= 시작 AND < 다음 시작`이 인덱스 친화적인 형태입니다."},
+            {"type": "code", "label": "02 · 복합 인덱스", "title": "\"우리 가게 이번 달 주문\"",
+             "sql": "EXPLAIN\nSELECT order_id, status, ordered_at\nFROM orders\nWHERE restaurant_id = 4 AND ordered_at >= '2026-06-01';", "cols": EX + ["filtered"], "layout": "stack", "codeSize": 20, "resSize": 14,
+             "caption": "FK 인덱스로 4번 가게 56건을 찾은 뒤 날짜는 **하나씩 걸러 냄**(`filtered` ≈ 19%). 두 조건을 한 인덱스로 처리하려면?"},
+            {"type": "code", "label": "02 · 복합 인덱스", "title": "두 열을 묶은 인덱스",
+             "sql": "CREATE INDEX idx_orders_restaurant_date ON orders (restaurant_id, ordered_at);\n\nEXPLAIN\nSELECT order_id, status, ordered_at\nFROM orders\nWHERE restaurant_id = 4 AND ordered_at >= '2026-06-01';", "cols": ["type", "key", "rows", "Extra"], "layout": "stack", "codeSize": 17, "resSize": 15,
+             "caption": "`rows` 56 → 13. 복합 인덱스는 **전화번호부** — 먼저 가게 순, 같은 가게 안에서 날짜 순으로 정렬."},
+            {"type": "code", "label": "02 · 복합 인덱스", "title": "그럼 날짜만 조건이면? (단일 인덱스를 잠시 숨기고)",
+             "sql": "ALTER TABLE orders ALTER INDEX idx_orders_ordered_at INVISIBLE;\n\n" + TODAY, "cols": EX, "layout": "stack", "codeSize": 17, "resSize": 14,
+             "caption": "`ALL`. 성(姓) 순 전화번호부로는 이름만으로 찾을 수 없습니다 — **최좌측 접두사 규칙**. `INVISIBLE` = 지우지 않고 숨기기(MySQL 8)."},
+            {"type": "code", "label": "02 · 복합 인덱스", "title": "(다시 보이게)",
+             "sql": "ALTER TABLE orders ALTER INDEX idx_orders_ordered_at VISIBLE;\n\n" + TODAY, "cols": EX, "layout": "stack", "codeSize": 17, "resSize": 14},
+            {"type": "table", "label": "02 · 정리", "title": "복합 인덱스 (A, B)와 인덱스의 비용",
+             "headers": ["조건 / 비용", "설명"],
+             "rows": [["`WHERE A = ?`", "✓ 사용"],
+                      ["`WHERE A = ? AND B >= ?`", "✓ 가장 효과적 — **= 조건 열 앞, 범위 조건 열 뒤**"],
+                      ["`WHERE B >= ?`", "✗ A를 건너뜀"],
+                      ["쓰기 비용", "INSERT·UPDATE·DELETE마다 인덱스도 수정"],
+                      ["만들 열", "WHERE·JOIN·ORDER BY에 자주, 값의 종류가 많은 열"],
+                      ["만들지 않을 열", "거의 안 쓰는 열, `is_open`처럼 값이 두세 종류인 열"]],
+             "colW": [3.8, 8.23], "rowH": 0.6, "boldFirst": False, "size": 14},
+        ]},
+        {"title": "사용자와 권한", "slides": [
+            {"type": "section", "label": "03", "title": "사용자와 권한", "sub": "필요한 만큼만 — 최소 권한 원칙"},
+            {"type": "table", "label": "03 · 계정", "title": "계정 = '사용자명'@'접속 위치'",
+             "headers": ["호스트", "뜻"],
+             "rows": [["`'localhost'`", "이 컴퓨터에서만 접속"],
+                      ["`'192.168.0.%'`", "사내망에서만"],
+                      ["`'%'`", "어디서든 (운영에서는 주의)"]],
+             "colW": [3.6, 8.43], "rowH": 0.7, "boldFirst": False,
+             "caption": "모두가 root를 쓰면 인턴의 실수 하나로 `DROP DATABASE`. 같은 이름이라도 호스트가 다르면 **다른 계정**."},
+            {"type": "code", "label": "03 · GRANT", "title": "인턴 계정 — 뷰 두 개만 읽기",
+             "sql": f"DROP USER IF EXISTS 'hanip_intern'@'localhost';\nCREATE USER 'hanip_intern'@'localhost' IDENTIFIED BY 'Intern!2026';\nGRANT SELECT ON {DB}.v_store_monthly_sales TO 'hanip_intern'@'localhost';\nGRANT SELECT ON {DB}.v_customers_masked    TO 'hanip_intern'@'localhost';\n\nSHOW GRANTS FOR 'hanip_intern'@'localhost';",
+             "layout": "stack", "codeSize": 14, "resSize": 13,
+             "caption": "`USAGE` = 접속만 가능. 범위: `ON *.*` 서버 전체 · `ON db.*` DB · `ON db.t` 테이블 · `SELECT (열…)` 열 단위."},
+            {"type": "code", "label": "03 · 접속 확인", "title": "인턴으로 접속해 보면",
+             "run": False, "codeSize": 17,
+             "sql": "USE hanip_delivery10;\nSHOW TABLES;                                  -- 권한 있는 뷰 2개만 보인다\nSELECT * FROM v_customers_masked LIMIT 3;     -- ✓ 010-****-5523\n\nSELECT phone FROM customers LIMIT 1;\n-- Error Code: 1142. SELECT command denied to user 'hanip_intern'@'localhost' for table 'customers'\n\nDELETE FROM v_customers_masked WHERE customer_id = 1;\n-- Error Code: 1142. DELETE command denied to user 'hanip_intern'@'localhost' for table 'v_customers_masked'",
+             "caption": "Workbench **MySQL Connections ⊕** → `hanip_intern` / `Intern!2026`. 원본은 못 보지만 뷰는 조회 → 요청 ③ 해결."},
+            {"type": "code", "label": "03 · REVOKE", "title": "권한 회수",
+             "sql": f"REVOKE SELECT ON {DB}.v_customers_masked FROM 'hanip_intern'@'localhost';\n\nSHOW GRANTS FOR 'hanip_intern'@'localhost';",
+             "layout": "stack", "codeSize": 17, "resSize": 14,
+             "caption": "**GRANT … TO / REVOKE … FROM.** 계약 종료 시 `DROP USER`, 비밀번호 변경은 `ALTER USER … IDENTIFIED BY …`."},
+            {"type": "code", "label": "03 · ROLE", "title": "역할 — 권한 묶음",
+             "sql": f"DROP ROLE IF EXISTS 'hanip_report_reader';\nCREATE ROLE 'hanip_report_reader';\nGRANT SELECT ON {DB}.v_store_monthly_sales TO 'hanip_report_reader';\nGRANT SELECT ON {DB}.v_customers_masked    TO 'hanip_report_reader';\n\nGRANT 'hanip_report_reader' TO 'hanip_intern'@'localhost';\nSET DEFAULT ROLE 'hanip_report_reader' TO 'hanip_intern'@'localhost';",
+             "layout": "stack", "codeSize": 16,
+             "caption": "인턴이 다섯 명이어도 역할 하나에 권한을 모으고, 사람에게는 역할만. ⚠ `SET DEFAULT ROLE`을 **빼먹으면** 접속해도 권한이 없는 것처럼 보입니다."},
+            {"type": "code", "label": "03 · ROLE", "title": "역할까지 펼쳐서 권한 확인",
+             "sql": "SHOW GRANTS FOR 'hanip_intern'@'localhost' USING 'hanip_report_reader';",
+             "layout": "stack", "codeSize": 18, "resSize": 15,
+             "caption": "`USING 역할` = 역할이 주는 권한까지 합쳐서 보기."},
+            {"type": "table", "label": "03 · 최소 권한", "title": "누구에게 무엇을",
+             "headers": ["계정", "권한", "이유"],
+             "rows": [["웹 애플리케이션 서버", "`SELECT, INSERT, UPDATE, DELETE ON db.*`", "데이터 처리만. DROP · ALTER 불가"],
+                      ["데이터 분석가", "`SELECT ON db.*`", "읽기 전용"],
+                      ["인턴 · 협력사", "마스킹 뷰에만 `SELECT` (역할로)", "개인정보 보호"],
+                      ["DBA", "전체 (`root`)", "사람 수 최소, 일상 업무엔 쓰지 않기"]],
+             "colW": [3.0, 5.2, 3.83], "rowH": 0.7, "boldFirst": False},
+        ]},
+        {"title": "백업 · 총정리", "slides": [
+            {"type": "code", "label": "04 · 백업", "title": "mysqldump — 10번의 수업 기록 보관",
+             "run": False, "codeSize": 15,
+             "sql": "# 오늘 DB 백업 (명령 프롬프트 / 터미널에서)\nmysqldump -u root -p --routines --triggers hanip_delivery10 > hanip_delivery10_backup.sql\n\n# 수업 기록 01~10 전부를 한 파일로\nmysqldump -u root -p --databases hanip_delivery01 hanip_delivery02 … hanip_delivery10 > hanip_all_chapters.sql\n\n# 복원: 빈 DB를 만들고 그 안으로\nmysql -u root -p -e \"CREATE DATABASE hanip_delivery10_restore\"\nmysql -u root -p hanip_delivery10_restore < hanip_delivery10_backup.sql",
+             "caption": "Workbench **Server → Data Export / Data Import**. 백업은 **복원해 봐야** 백업. 계정·권한은 덤프에 포함되지 않습니다."},
+            {"type": "table", "label": "05 · SQL 총정리", "title": "10챕터의 SQL을 한 장에",
+             "headers": ["분류", "명령어", "챕터"],
+             "rows": [["**DDL** 데이터 정의어", "`CREATE` · `ALTER` · `DROP` · `TRUNCATE`", "07 · 09 · 10"],
+                      ["**DML** 데이터 조작어", "`SELECT` · `INSERT` · `UPDATE` · `DELETE`", "02~06 · 08"],
+                      ["**DCL** 데이터 제어어", "`GRANT` · `REVOKE`", "10"],
+                      ["**TCL** 트랜잭션 제어어", "`COMMIT` · `ROLLBACK` · `SAVEPOINT`", "08"]],
+             "colW": [3.6, 6.0, 2.43], "rowH": 0.72, "boldFirst": False,
+             "caption": "정보처리기사 단골: SELECT 실행 순서 · NULL과 집계 · JOIN 행 수 · 뷰의 특징 · `WITH GRANT OPTION` · 정규화 · ACID"},
+        ]},
+        {"title": "마무리", "slides": [
+            {"type": "table", "label": "정리", "title": "오늘 배운 것",
+             "headers": ["개념", "핵심"],
+             "rows": [["`CREATE VIEW`", "SELECT에 이름 붙이기. 데이터 저장 안 함. 뷰 위에 뷰"],
+                      ["갱신 가능한 뷰", "단일 테이블·집계 없음. `WITH CHECK OPTION` 1369, 집계 뷰 1288"],
+                      ["인덱스 · `EXPLAIN`", "정렬된 찾아보기. `type` ALL vs range/ref, `key`, `rows`"],
+                      ["인덱스 못 쓰는 쿼리", "열 가공(`DATE(열)`), 앞 `%` LIKE"],
+                      ["복합 인덱스", "왼쪽 열부터. = 조건 앞, 범위 조건 뒤"],
+                      ["계정 · 권한 · 역할", "`'user'@'host'`, GRANT TO / REVOKE FROM, `SET DEFAULT ROLE`"],
+                      ["백업", "`mysqldump` → SQL 파일, 복원해 봐야 백업"]],
+             "colW": [3.6, 8.43], "rowH": 0.56, "size": 14},
+            {"type": "practice", "label": "실습", "title": "practice.md — 저장하고, 빠르게, 안전하게",
+             "items": ["가게 평점 뷰 ★", "기사 공개 뷰 ★", "뷰 위에 쿼리 쌓기 ★★", "조건을 지키는 뷰 ★★", "이미 있는 인덱스 ★",
+                       "EXPLAIN 전후 비교 ★★", "인덱스를 살리는 쿼리 ★★", "정렬까지 인덱스로 ★★★", "읽기 전용 계정 ★★", "CS 상담원 역할 ★★★"],
+             "caption": "**root로 접속**해서 푸세요. 9·10번은 만든 계정으로 직접 접속해 막히는지까지 확인."},
+            {"type": "closing", "label": "다음 시간 · Ch11 트리거", "title": "누가 바꾸든 자동으로",
+             "from": "운영팀 박 팀장 · 정산팀 정 대리",
+             "text": "메뉴 가격을 **언제, 얼마에서 얼마로** 바꿨는지 기록이 없어요. 배달완료 주문이 '접수'로 돌아가는 버그도 있었고요. **누가 어떤 경로로 바꾸든** 자동으로 기록하고 막아 주세요.",
+             "teaser": "데이터가 바뀌는 순간 자동으로 실행되는 SQL — PART 4 서버 프로그래밍, Ch11."},
+        ]},
+    ],
+}
